@@ -13,6 +13,7 @@ use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Str;
 use Laravel\Fortify\Actions\RedirectIfTwoFactorAuthenticatable;
 use Laravel\Fortify\Fortify;
+use Laravel\Fortify\Http\Requests\LoginRequest;
 
 class FortifyServiceProvider extends ServiceProvider
 {
@@ -51,6 +52,29 @@ class FortifyServiceProvider extends ServiceProvider
 
         Fortify::registerView(function () {
             return view('auth.register');
+        });
+
+        $this->app->bind(LoginRequest::class, function ($app) {
+            return new class extends LoginRequest
+            {
+                public function rules(): array
+                {
+                    return [
+                        'email' => 'required|string|email',
+                        'password' => 'required|string|min:8',
+                    ];
+                }
+
+                public function messages(): array
+                {
+                    return [
+                        'email.required' => 'メールアドレスを入力してください',
+                        'email.email' => 'メール形式で入力してください',
+                        'password.required' => 'パスワードを入力してください',
+                        'password.min' => 'パスワードは8文字以上で入力してください',
+                    ];
+                }
+            };
         });
     }
 }
