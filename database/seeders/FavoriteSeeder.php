@@ -2,9 +2,8 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
-use App\Models\User;
 use App\Models\Book;
+use App\Models\User;
 use Illuminate\Database\Seeder;
 
 class FavoriteSeeder extends Seeder
@@ -17,8 +16,8 @@ class FavoriteSeeder extends Seeder
         $users = User::all();
         $books = Book::all();
 
-        foreach($users as $user) {
-            $randomBookIds = $books->random(rand(3,5))->pluck('id')->toArray();
+        foreach ($users as $user) {
+            $randomBookIds = $books->random(rand(3, 5))->pluck('id')->toArray();
 
             $user->favoriteBooks()->syncWithoutDetaching($randomBookIds);
         }
