@@ -1,22 +1,20 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Api\V1;
 
-use App\Http\Requests\StoreBookRequest;
-use App\Http\Requests\UpdateBookRequest;
+use App\Http\Controllers\Controller;
+use App\Http\Requests\Api\V1\IndexBookRequest;
+use App\Http\Requests\Api\V1\StoreBookRequest;
+use App\Http\Requests\Api\V1\UpdateBookRequest;
+use App\Http\Resources\BookResource;
 use App\Models\Book;
-use App\Models\Genre;
-use Illuminate\Http\Request;
 
 class BookController extends Controller
 {
-    public function index(Request $request)
+    public function index(IndexBookRequest $request)
     {
         $query = Book::with('genres')->withAvg('reviews', 'rating');
 
-        if (! $request->anyFilled(['keyword', 'genre_id', 'sort'])) {
-            $books = $query->paginate(10);
-        }
         if ($request->filled('keyword')) {
             $keyword = $request->input('keyword');
             $query->where(function ($q) use ($keyword) {
@@ -46,53 +44,39 @@ class BookController extends Controller
             }
         }
 
-        $books = $query->paginate(10)->appends($request->query());
-        $genres = Genre::all();
+        $perPage = $request->input('per_page', 20);
+        $books = $query->paginate($perPage)->appends($request->query());
 
-        return view('books.index', compact(['books', 'genres']));
+        return BookResource::collection($books);
     }
 
     public function show(Book $book)
     {
-        return view('books.show', compact('book'));
-    }
+        $book->load(['genres', 'reviews.user'])
+            ->loadAvg('reviews', 'rating')
+            ->loadCount('reviews');
 
-    public function edit(Book $book)
-    {
-        $this->authorize('update', $book);
-
-        $genres = Genre::all();
-
-        return view('books.edit', compact(['book', 'genres']));
-    }
-
-    public function create()
-    {
-
-        $genres = Genre::all();
-
-        return view('books.create', compact('genres'));
+        return new BookResource($book);
     }
 
     public function store(StoreBookRequest $request)
     {
-
         $validated = $request->validated();
         $genreIds = $validated['genres'];
-        $validated['user_id'] = auth()->user()->id;
         unset($validated['genres']);
 
         $book = Book::create($validated);
         $book->genres()->sync($genreIds);
 
-        return redirect()->route('books.index')->with('success', '書籍情報を登録しました');
+        $book->load(['genres', 'reviews.user'])
+            ->loadAvg('reviews', 'rating')
+            ->loadCount('reviews');
+
+        return (new BookResource($book))->response()->setStatusCode(201);
     }
 
     public function update(UpdateBookRequest $request, Book $book)
     {
-
-        $this->authorize('update', $book);
-
         $validated = $request->validated();
         $genreIds = $validated['genres'];
         unset($validated['genres']);
@@ -100,22 +84,17 @@ class BookController extends Controller
         $book->update($validated);
         $book->genres()->sync($genreIds);
 
-        return redirect()->route('books.index')->with('success', '書籍情報を更新しました');
+        $book->load(['genres', 'reviews.user'])
+            ->loadAvg('reviews', 'rating')
+            ->loadCount('reviews');
+
+        return new BookResource($book);
     }
 
     public function destroy(Book $book)
     {
-        $this->authorize('delete', $book);
-
         $book->delete();
 
-        return redirect()->route('books.index')->with('success', '書籍情報を削除しました');
-    }
-
-    public function ranking()
-    {
-        $rankedBooks = Book::withAvg('reviews', 'rating')->withCount('reviews')->orderByDesc('reviews_avg_rating')->get();
-
-        return view('ranking.index', compact('rankedBooks'));
+        return response()->json(null, 204);
     }
 }
