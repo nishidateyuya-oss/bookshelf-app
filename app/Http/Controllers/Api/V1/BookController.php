@@ -30,7 +30,7 @@ class BookController extends Controller
         }
         if ($request->filled('sort')) {
             $sort = $request->input('sort');
-            if ($sort === 'latest') {
+            if ($sort === 'newest') {
                 $query->orderBy('created_at', 'desc');
             }
             if ($sort === 'oldest') {

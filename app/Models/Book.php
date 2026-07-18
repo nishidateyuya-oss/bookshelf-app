@@ -36,6 +36,6 @@ class Book extends Model
 
     public function favoritedByUsers()
     {
-        return $this->belongsToMany(User::class, 'favorite');
+        return $this->belongsToMany(User::class, 'favorites');
     }
 }
