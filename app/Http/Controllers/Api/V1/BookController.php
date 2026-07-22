@@ -22,10 +22,10 @@ class BookController extends Controller
                     ->orWhere('author', 'like', "%{$keyword}%");
             });
         }
-        if ($request->filled('genre_id')) {
-            $genre_id = $request->input('genre_id');
+        if ($request->filled('genre')) {
+            $genre_id = $request->input('genre');
             $query->whereHas('genres', function ($q) use ($genre_id) {
-                $q->where('id', $genre_id);
+                $q->where('genres.id', $genre_id);
             });
         }
         if ($request->filled('sort')) {

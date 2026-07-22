@@ -2,15 +2,16 @@
 
 namespace Tests\Unit\Models;
 
-use Illuminate\Foundation\Testing\RefreshDatabase;
-use App\Models\User;
 use App\Models\Book;
 use App\Models\Review;
+use App\Models\User;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
 class ReviewTest extends TestCase
 {
     use RefreshDatabase;
+
     public function test_review_belongs_to_user(): void
     {
         $user = User::factory()->create();
@@ -19,14 +20,16 @@ class ReviewTest extends TestCase
         $this->assertTrue($review->user->is($user));
     }
 
-    public function test_review_belongs_to_book(): void {
+    public function test_review_belongs_to_book(): void
+    {
         $book = Book::factory()->create();
         $review = Review::factory()->for($book)->create();
 
         $this->assertTrue($review->book->is($book));
     }
 
-    public function test_review_belongs_to_many_users(): void {
+    public function test_review_belongs_to_many_users(): void
+    {
         $review = Review::factory()->create();
         $users = User::factory()->count(5)->create();
 

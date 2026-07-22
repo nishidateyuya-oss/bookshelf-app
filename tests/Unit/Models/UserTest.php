@@ -2,16 +2,16 @@
 
 namespace Tests\Unit\Models;
 
-
-use Illuminate\Foundation\Testing\RefreshDatabase;
-use App\Models\User;
 use App\Models\Book;
 use App\Models\Review;
+use App\Models\User;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
 class UserTest extends TestCase
 {
     use RefreshDatabase;
+
     public function test_user_has_many_books(): void
     {
         $user = User::factory()->create();
@@ -21,7 +21,8 @@ class UserTest extends TestCase
         $this->assertInstanceOf(Book::class, $user->books->first());
     }
 
-    public function test_user_has_many_reviews(): void {
+    public function test_user_has_many_reviews(): void
+    {
         $user = User::factory()->create();
         Review::factory()->count(5)->for($user)->create();
 
@@ -29,7 +30,8 @@ class UserTest extends TestCase
         $this->assertInstanceOf(Review::class, $user->reviews->first());
     }
 
-    public function test_user_belongs_to_many_books(): void {
+    public function test_user_belongs_to_many_books(): void
+    {
         $user = User::factory()->create();
         $books = Book::factory()->count(5)->create();
 
@@ -41,7 +43,8 @@ class UserTest extends TestCase
         $this->assertTrue($user->favoriteBooks->pluck('id')->contains($books->first()->id));
     }
 
-    public function test_user_belongs_to_many_reviews(): void {
+    public function test_user_belongs_to_many_reviews(): void
+    {
         $user = User::factory()->create();
         $reviews = Review::factory()->count(5)->create();
 

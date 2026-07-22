@@ -3,11 +3,15 @@
 use App\Http\Controllers\BookController;
 use App\Http\Controllers\FavoriteController;
 use App\Http\Controllers\GenreController;
+use App\Http\Controllers\NotificationController;
+use App\Http\Controllers\RedingPlanController;
+use App\Http\Controllers\ReportController;
 use App\Http\Controllers\ReviewController;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware('auth')->group(function () {
     Route::get('/books/create', [BookController::class, 'create'])->name('books.create');
+    Route::get('/books/isbn/{isbn}', [BookController::class, 'searchByIsbn']);
     Route::post('/books', [BookController::class, 'store'])->name('books.store');
     Route::get('/books/{book}/edit', [BookController::class, 'edit'])->name('books.edit');
     Route::put('/books/{book}', [BookController::class, 'update'])->name('books.update');
@@ -34,3 +38,7 @@ Route::middleware('auth')->group(function () {
 Route::get('/books', [BookController::class, 'index'])->name('books.index');
 Route::get('/books/{book}', [BookController::class, 'show'])->name('books.show');
 Route::get('/ranking', [BookController::class, 'ranking'])->name('ranking.index');
+
+Route::get('/reports', [ReportController::class, 'index'])->name('reports.index');
+Route::get('/reding-plans', [RedingPlanController::class, 'index'])->name('reading-plans.index');
+Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index');

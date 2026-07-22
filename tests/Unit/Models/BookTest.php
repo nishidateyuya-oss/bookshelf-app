@@ -2,11 +2,11 @@
 
 namespace Tests\Unit\Models;
 
-use Illuminate\Foundation\Testing\RefreshDatabase;
-use App\Models\User;
 use App\Models\Book;
 use App\Models\Genre;
 use App\Models\Review;
+use App\Models\User;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
 class BookTest extends TestCase
@@ -21,7 +21,8 @@ class BookTest extends TestCase
         $this->assertTrue($book->user->is($user));
     }
 
-    public function test_book_belongs_to_many_genres(): void {
+    public function test_book_belongs_to_many_genres(): void
+    {
         $book = Book::factory()->create();
         $genres = Genre::factory()->count(3)->create();
 
@@ -33,7 +34,8 @@ class BookTest extends TestCase
         $this->assertTrue($book->genres->pluck('id')->contains($genres->first()->id));
     }
 
-    public function test_book_has_many_reviews(): void {
+    public function test_book_has_many_reviews(): void
+    {
         $book = Book::factory()->create();
         Review::factory()->count(5)->for($book)->create();
 
@@ -41,7 +43,8 @@ class BookTest extends TestCase
         $this->assertInstanceOf(Review::class, $book->reviews->first());
     }
 
-    public function test_book_belongs_to_many_users(): void {
+    public function test_book_belongs_to_many_users(): void
+    {
         $book = Book::factory()->create();
         $users = User::factory()->count(5)->create();
 

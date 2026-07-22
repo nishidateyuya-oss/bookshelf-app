@@ -7,6 +7,7 @@ use App\Http\Requests\UpdateBookRequest;
 use App\Models\Book;
 use App\Models\Genre;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Http;
 
 class BookController extends Controller
 {
@@ -14,9 +15,6 @@ class BookController extends Controller
     {
         $query = Book::with('genres')->withAvg('reviews', 'rating');
 
-        if (! $request->anyFilled(['keyword', 'genre_id', 'sort'])) {
-            $books = $query->paginate(10);
-        }
         if ($request->filled('keyword')) {
             $keyword = $request->input('keyword');
             $query->where(function ($q) use ($keyword) {
@@ -24,15 +22,15 @@ class BookController extends Controller
                     ->orWhere('author', 'like', "%{$keyword}%");
             });
         }
-        if ($request->filled('genre_id')) {
-            $genre_id = $request->input('genre_id');
+        if ($request->filled('genre')) {
+            $genre_id = $request->input('genre');
             $query->whereHas('genres', function ($q) use ($genre_id) {
-                $q->where('id', $genre_id);
+                $q->where('genres.id', $genre_id);
             });
         }
         if ($request->filled('sort')) {
             $sort = $request->input('sort');
-            if ($sort === 'latest') {
+            if ($sort === 'newest') {
                 $query->orderBy('created_at', 'desc');
             }
             if ($sort === 'oldest') {
@@ -117,5 +115,53 @@ class BookController extends Controller
         $rankedBooks = Book::withAvg('reviews', 'rating')->withCount('reviews')->orderByDesc('reviews_avg_rating')->get();
 
         return view('ranking.index', compact('rankedBooks'));
+    }
+
+    public function searchByIsbn(string $isbn)
+    {
+
+        if (strlen($isbn) !== 13 || ! ctype_digit($isbn)) {
+            return response()->json(['error' => 'ISBNは13桁で入力してください。'], 400);
+        }
+
+        $apiKey = config('services.google_books.api_key');
+
+        $params = ['q' => 'isbn:'.$isbn];
+        if ($apiKey) {
+            $params['key'] = $apiKey;
+        }
+
+        $response = Http::get('https://www.googleapis.com/books/v1/volumes', $params);
+
+        if ($response->status() === 429) {
+            return response()->json([
+                'error' => 'Google Books API のクォータを超過しました。.env に GOOGLE_BOOKS_API_KEY を設定してください。',
+            ], 429);
+        }
+
+        if ($response->failed()) {
+            return response()->json(['error' => 'API通信エラーが発生しました。'], 500);
+        }
+
+        $data = $response->json();
+
+        if (($data['totalItems'] ?? 0) === 0 || empty($data['items'])) {
+            return response()->json(['error' => '書籍が見つかりませんでした。'], 404);
+        }
+
+        $item = $data['items'][0]['volumeInfo'] ?? [];
+
+        $imageUrl = $item['imageLinks']['thumbnail'] ?? '';
+        if ($imageUrl) {
+            $imageUrl = str_replace('http://', 'https://', $imageUrl);
+        }
+
+        return response()->json([
+            'title' => $item['title'] ?? '',
+            'author' => implode(', ', $item['authors'] ?? []),
+            'published_date' => $item['publishedDate'] ?? '',
+            'description' => $item['description'] ?? '',
+            'image_url' => $imageUrl,
+        ]);
     }
 }
